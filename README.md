@@ -1,10 +1,10 @@
-# 📊 Enhanced Earned Value Analysis (EVA) Dashboard | アーンド・バリュー分析ツール
+# 📊 Earned Value Analysis (EVA) Dashboard | アーンド・バリュー分析ツール
 
 A bilingual web app for real-time project performance analysis and forecasting — built to support project managers and stakeholders with visually intuitive metrics, AI-driven reporting, and printable summaries.
 
 > 🔧 Designed with PMBOK-compliant metrics  
 > 🇯🇵 Works in English and Japanese  
-> 💼 Built during internal digital transformation initiatives at Air Liquide Japan
+> 💼 Built during internal digital transformation initiatives for the PMO
 
 ---
 
