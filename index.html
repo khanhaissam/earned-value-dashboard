@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Earned Value Analysis (EVA) Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* Using Inter font for better readability */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        /* Print-specific styles */
+        .print-mode .non-printable { display: none; }
+        .print-mode .printable-header { display: block; }
+        .print-mode .report-card { box-shadow: none; border: 1px solid #e5e7eb; }
+        
+        /* FIX: Re-flow layout for printing to be more vertical and readable */
+        .print-mode .summary-grid {
+            grid-template-columns: 1fr; /* Stack chart and interpretation */
+        }
+        .print-mode #analysis-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr)); /* Use 3 columns for metrics */
+            gap: 1rem;
+        }
+
+        /* Tooltip Styles */
+        .tooltip-trigger { position: relative; display: inline-block; }
+        .tooltip-content {
+            visibility: hidden; opacity: 0; width: 280px; background-color: #1f2937;
+            color: #fff; text-align: left; border-radius: 6px; padding: 10px;
+            position: absolute; z-index: 10; bottom: 125%; left: 50%;
+            margin-left: -140px; transition: opacity 0.3s; font-size: 0.8rem; line-height: 1.4;
+        }
+        .tooltip-content::after {
+            content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px;
+            border-width: 5px; border-style: solid; border-color: #1f2937 transparent transparent transparent;
+        }
+        .tooltip-trigger:hover .tooltip-content { visibility: visible; opacity: 1; }
+        .tooltip-content strong { color: #a5b4fc; display: block; margin-bottom: 4px; }
+
+        .tooltip-content.align-left {
+            left: auto;
+            right: 0;
+            margin-left: 0;
+        }
+        .tooltip-content.align-left::after {
+            left: auto;
+            right: 10px;
+            margin-left: 0;
+        }
+        
+        /* Language Toggle Styles */
+        .lang-toggle-label {
+            position: relative;
+            display: inline-flex;
+            width: 84px;
+            height: 34px;
+            background-color: #e5e7eb;
+            border-radius: 34px;
+            padding: 4px;
+            cursor: pointer;
+            transition: background-color 0.4s;
+        }
+        .lang-toggle-label input { display: none; }
+        .lang-slider {
+            position: absolute;
+            height: 26px;
+            width: 38px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.4s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .lang-toggle-label span {
+            position: relative;
+            z-index: 1;
+            width: 50%;
+            text-align: center;
+            line-height: 26px;
+            font-weight: bold;
+            color: #4b5563;
+        }
+        input:checked ~ .lang-slider {
+            transform: translateX(42px);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Air Liquide Banner -->
+    <div class="bg-[#004A99] text-white p-3 non-printable">
+        <p class="text-xl font-bold">Air Liquide</p>
+    </div>
+
+    <!-- Main Content Wrapper -->
+    <div class="p-4 md:p-8 space-y-8">
+
+    <header class="text-center non-printable flex justify-between items-center">
+        <div class="flex-1"></div>
+        <div class="flex-1">
+            <h1 class="text-3xl md:text-4xl font-bold text-indigo-700 whitespace-nowrap" data-lang="mainTitle">Earned Value Analysis Dashboard</h1>
+            <p class="text-gray-600 mt-2 whitespace-nowrap" data-lang="subTitle">Tool for real-time project health assessment and forecasting</p>
+        </div>
+        <div class="flex-1 flex justify-end">
+            <label class="lang-toggle-label">
+                <input type="checkbox" id="lang-toggle">
+                <span class="lang-en">EN</span>
+                <span class="lang-ja">JA</span>
+                <div class="lang-slider"></div>
+            </label>
+        </div>
+    </header>
+
+    <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 non-printable">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-6 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3 text-indigo-500"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            <span data-lang="inputsTitle">Project Information & Inputs</span>
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
+            <div class="space-y-4">
+                <div>
+                    <label for="project-title" class="block text-sm font-medium text-gray-600 mb-1" data-lang="projectTitleLabel">Project Title</label>
+                    <input type="text" id="project-title" data-lang-placeholder="projectTitlePlaceholder" placeholder="e.g., Digital Transformation" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                </div>
+                <div>
+                    <label for="project-manager" class="block text-sm font-medium text-gray-600 mb-1" data-lang="projectManagerLabel">Project Manager</label>
+                    <input type="text" id="project-manager" data-lang-placeholder="projectManagerPlaceholder" placeholder="e.g., Jane Doe" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                </div>
+                 <div>
+                    <label for="currency-symbol" class="block text-sm font-medium text-gray-600 mb-1" data-lang="currencyLabel">Currency Symbol</label>
+                    <input type="text" id="currency-symbol" value="$" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                </div>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label for="bac" class="block text-sm font-medium text-gray-600 mb-1" data-lang="bacLabel">Budget at Completion (BAC)</label>
+                    <input type="number" id="bac" data-lang-placeholder="bacPlaceholder" placeholder="e.g., 100000" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                </div>
+                <div>
+                    <label for="duration" class="block text-sm font-medium text-gray-600 mb-1" data-lang="durationLabel">Project Duration (months)</label>
+                    <input type="number" id="duration" data-lang-placeholder="durationPlaceholder" placeholder="e.g., 12" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                </div>
+                <div>
+                    <label for="data-date" class="block text-sm font-medium text-gray-600 mb-1" data-lang="dataDateLabel">Data Date (current month)</label>
+                    <input type="number" id="data-date" data-lang-placeholder="dataDatePlaceholder" placeholder="e.g., 6" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                </div>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label for="percent-complete" class="block text-sm font-medium text-gray-600 mb-1" data-lang="percentCompleteLabel">Physical % Complete</label>
+                    <div class="relative">
+                        <input type="number" id="percent-complete" data-lang-placeholder="percentCompletePlaceholder" placeholder="e.g., 45" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition pr-8">
+                        <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500">%</span>
+                    </div>
+                </div>
+                <div>
+                    <label for="ac" class="block text-sm font-medium text-gray-600 mb-1" data-lang="acLabel">Actual Cost (AC)</label>
+                    <input type="number" id="ac" data-lang-placeholder="acPlaceholder" placeholder="e.g., 55000" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                </div>
+                 <div>
+                    <label for="ev-calculated" class="block text-sm font-medium text-gray-600 mb-1" data-lang="evLabel">Earned Value (EV)</label>
+                    <input type="text" id="ev-calculated" class="w-full p-2 border-gray-200 bg-gray-100 rounded-md cursor-not-allowed" readonly>
+                </div>
+            </div>
+            <div class="space-y-4">
+                 <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1" data-lang="pvMethodLabel">PV Calculation Method</label>
+                    <div class="flex items-center space-x-4 pt-1">
+                        <label><input type="radio" name="pv-method" value="auto" checked class="mr-1"><span data-lang="pvCalculate">Calculate</span></label>
+                        <label><input type="radio" name="pv-method" value="manual" class="mr-1"><span data-lang="pvManual">Manual</span></label>
+                    </div>
+                </div>
+                <div id="progress-curve-wrapper">
+                    <label for="progress-curve" class="block text-sm font-medium text-gray-600 mb-1" data-lang="progressCurveLabel">Progress Curve Type</label>
+                    <select id="progress-curve" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                        <option value="linear" data-lang="curveLinear">Linear (Default)</option>
+                        <option value="s-curve" data-lang="curveSCurve">S-Curve</option>
+                        <option value="front-loaded" data-lang="curveFrontLoaded">Front-Loaded</option>
+                        <option value="back-loaded" data-lang="curveBackLoaded">Back-Loaded</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="pv" class="block text-sm font-medium text-gray-600 mb-1" data-lang="pvLabel">Planned Value (PV)</label>
+                    <input type="number" id="pv" class="w-full p-2 border-gray-200 bg-gray-100 rounded-md cursor-not-allowed" readonly>
+                </div>
+            </div>
+        </div>
+        <div class="flex space-x-4 mt-6 border-t border-gray-200 pt-6">
+            <button id="download-pdf-btn" data-lang="downloadPdfBtn" class="w-full py-2.5 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow disabled:bg-indigo-300 disabled:cursor-not-allowed">Download PDF Report</button>
+            <button id="clear-btn" data-lang="clearBtn" class="w-full py-2.5 px-4 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors shadow">Clear All</button>
+        </div>
+    </div>
+
+    <div id="printable-area" class="w-full">
+         <div id="pdf-page-1">
+            <div class="printable-header hidden">
+                <div class="bg-[#004A99] text-white p-3">
+                    <p class="text-xl font-bold">Air Liquide</p>
+                </div>
+                <div class="bg-white p-6 border-b border-gray-200">
+                    <h2 id="print-title" class="text-2xl font-bold text-indigo-700"></h2>
+                    <p id="print-subtitle" class="text-gray-600 mt-1"></p>
+                </div>
+            </div>
+            <div class="space-y-8 p-4">
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 report-card">
+                    <h2 class="text-2xl font-semibold text-gray-700 mb-4 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3 text-indigo-500"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg>
+                        <span data-lang="summaryTitle">Project Status Summary</span>
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 summary-grid">
+                        <div class="my-4 h-72"><canvas id="evaChart"></canvas></div>
+                        <div id="interpretation" class="p-4 rounded-lg flex flex-col justify-center transition-all duration-300 bg-gray-100">
+                            <p class="font-bold text-lg mb-2" id="status-text" data-lang="statusInitial">Enter values for analysis.</p>
+                            <p class="text-sm" id="status-detail" style="white-space: pre-wrap;" data-lang="statusDetailInitial">All core input fields are required for calculation.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 report-card">
+                        <h2 class="text-2xl font-semibold text-gray-700 mb-6 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3 text-indigo-500"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M14 10H3v11h11v-11z"/></svg>
+                        <span data-lang="analysisTitle">Analysis Results</span>
+                    </h2>
+                    <div id="analysis-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                        </div>
+                </div>
+            </div>
+         </div>
+         <div id="pdf-page-2">
+            <div class="printable-header hidden">
+                <div class="bg-[#004A99] text-white p-3">
+                    <p class="text-xl font-bold">Air Liquide</p>
+                </div>
+                <div class="bg-white p-6 border-b border-gray-200">
+                    <h2 id="print-title-page2" class="text-2xl font-bold text-indigo-700"></h2>
+                    <p id="print-subtitle-page2" class="text-gray-600 mt-1"></p>
+                </div>
+            </div>
+            <div class="p-4">
+               <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 report-card">
+                    <h2 class="text-2xl font-semibold text-gray-700 mb-2 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3 text-indigo-500"><path d="M12 8V4H8"/><path d="M20 12v-4h-4"/><path d="M4 12a8 8 0 1 0 16 0Z"/></svg>
+                        <span data-lang="narrativeTitle">Performance Narrative</span>
+                    </h2>
+                    <div class="non-printable">
+                        <p class="text-sm text-gray-600 mt-4" data-lang="aiNote"></p>
+                        <button id="ai-analysis-btn" data-lang="generateAiBtn" class="mt-4 w-full md:w-auto py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow disabled:bg-indigo-300 disabled:cursor-not-allowed">
+                            ✨ Generate AI Analysis
+                        </button>
+                    </div>
+                    <div id="ai-narrative-container" class="p-4 rounded-lg bg-gray-100 min-h-[100px] mt-4">
+                        <div id="ai-narrative-content" class="text-sm text-gray-700" data-lang-html="narrativeInitial"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="ai-reports-container" class="mt-8 hidden non-printable">
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 report-card">
+                 <h3 class="text-xl font-semibold text-gray-700 mb-2 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3 text-indigo-500"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                    <span data-lang="aiReportsTitle">AI Report Assistant</span>
+                </h3>
+                <p class="text-sm text-gray-600 mb-4" data-lang="aiReportsDesc">Generate tailored status updates for different stakeholders with one click. The AI will reformat the performance narrative into a draft suitable for the selected audience.</p>
+                <div class="flex flex-wrap gap-4">
+                    <button id="exec-summary-btn" data-lang="execSummaryBtn" class="py-2 px-4 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors shadow">Draft Executive Summary</button>
+                    <button id="team-update-btn" data-lang="teamUpdateBtn" class="py-2 px-4 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors shadow">Draft Team Update</button>
+                </div>
+                <div class="relative mt-4">
+                    <div id="ai-report-output" class="mt-4 p-4 rounded-lg bg-gray-100 text-sm text-gray-700 whitespace-pre-wrap overflow-x-auto" data-lang-html="aiReportsInitial">Select a report type to generate a draft. For example, the "Executive Summary" will focus on high-level outcomes and budget implications, while the "Team Update" will provide a more detailed, action-oriented summary.</div>
+                    <button id="copy-report-btn" class="absolute top-2 right-2 p-1.5 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="text-center text-sm text-gray-500 mt-12 mb-4">
+        <p class="flex items-center justify-center space-x-1">
+            <span data-lang="footerDev">Developed with Gemini, following PMBOK</span>
+          </p>
+        <p data-lang="footerPrepared">Prepared by Haissam - haissam.khan@airliquide.com</p>
+    </footer>
+
+    </div> <!-- End Main Content Wrapper -->
+
+    <script>
+        // Use window.jspdf and window.html2canvas
+        const { jsPDF } = window.jspdf;
+
+        let currentLanguage = 'en';
+        let fullPerformanceNarrative = null;
+
+        const translations = {
+            en: {
+                mainTitle: "Earned Value Analysis Dashboard",
+                subTitle: "Tool for real-time project health assessment and forecasting",
+                inputsTitle: "Project Information & Inputs",
+                projectTitleLabel: "Project Title",
+                projectTitlePlaceholder: "e.g., Digital Transformation",
+                projectManagerLabel: "Project Manager",
+                projectManagerPlaceholder: "e.g., Jane Doe",
+                currencyLabel: "Currency Symbol",
+                bacLabel: "Budget at Completion (BAC)",
+                bacPlaceholder: "e.g., 100000",
+                durationLabel: "Project Duration (months)",
+                durationPlaceholder: "e.g., 12",
+                dataDateLabel: "Data Date (current month)",
+                dataDatePlaceholder: "e.g., 6",
+                percentCompleteLabel: "Physical % Complete",
+                percentCompletePlaceholder: "e.g., 45",
+                acLabel: "Actual Cost (AC)",
+                acPlaceholder: "e.g., 55000",
+                evLabel: "Earned Value (EV)",
+                pvMethodLabel: "PV Calculation Method",
+                pvCalculate: "Calculate",
+                pvManual: "Manual",
+                progressCurveLabel: "Progress Curve Type",
+                curveLinear: "Linear (Default)",
+                curveSCurve: "S-Curve",
+                curveFrontLoaded: "Front-Loaded",
+                curveBackLoaded: "Back-Loaded",
+                pvLabel: "Planned Value (PV)",
+                downloadPdfBtn: "Download PDF Report",
+                clearBtn: "Clear All",
+                summaryTitle: "Project Status Summary",
+                analysisTitle: "Analysis Results",
+                narrativeTitle: "Performance Narrative",
+                aiNote: "Leverage AI to generate a detailed summary, identify potential risks, and receive actionable recommendations based on your project data.",
+                generateAiBtn: "✨ Generate AI Analysis",
+                narrativeInitial: "This AI-powered feature provides a professional summary of your project's health, identifies key risks based on the data, and offers actionable recommendations.",
+                footerDev: "Developed with Gemini, following PMBOK",
+                footerPrepared: "Prepared by Haissam - haissam.khan@airliquide.com",
+                statusInitial: "Enter values for analysis.",
+                statusDetailInitial: "All core input fields are required for calculation.",
+                chartLabels: ['Planned Value (PV)', 'Earned Value (EV)', 'Actual Cost (AC)'],
+                chartTitle: 'PV vs EV vs AC',
+                months: 'months',
+                aiReportsTitle: "AI Report Assistant",
+                aiReportsDesc: "Generate tailored status updates for different stakeholders with one click. The AI will reformat the performance narrative into a draft suitable for the selected audience.",
+                execSummaryBtn: "Draft Executive Summary",
+                teamUpdateBtn: "Draft Team Update",
+                aiReportsInitial: "Select a report type to generate a draft. For example, the \"Executive Summary\" will focus on high-level outcomes and budget implications, while the \"Team Update\" will provide a more detailed, action-oriented summary.",
+                copyBtn: "Copy",
+                copiedBtn: "Copied!",
+                // Metric cards
+                pctTimeUsed: "% Time Used",
+                pctBudgetUsed: "% Budget Used",
+                sv: "Schedule Variance (SV)",
+                cv: "Cost Variance (CV)",
+                spi: "Schedule Performance Index (SPI)",
+                ppc: "Percent Plan Complete (PPC)",
+                cpi: "Cost Performance Index (CPI)",
+                spie: "SPI(t) (Earned Schedule)",
+                durationChange: "Duration Change",
+                tcpi: "To-Complete Performance Index (TCPI)",
+                etc: "Estimate to Complete (ETC)",
+                vac: "Variance at Completion (VAC)",
+                // EAC Forecast
+                eacForecastTitle: "EAC Forecast Range",
+                eacOptimistic: "Optimistic",
+                eacMostLikely: "Most Likely",
+                eacPessimistic: "Pessimistic",
+                // Tooltips
+                tooltip_pctTimeUsed: "<strong>Definition:</strong> The percentage of the project's planned duration that has elapsed. <br><strong>Purpose:</strong> Provides context for schedule performance. Answers: 'How far are we into the timeline?'",
+                tooltip_pctBudgetUsed: "<strong>Definition:</strong> The percentage of the total project budget (BAC) that has been spent (AC). <br><strong>Purpose:</strong> Provides context for cost performance. Answers: 'How much of our total budget have we spent?'",
+                tooltip_sv: "<strong>Definition:</strong> The difference between work completed (EV) and work planned (PV). <br><strong>Purpose:</strong> Measures if you are ahead of (positive $) or behind (negative $) schedule in monetary terms.",
+                tooltip_cv: "<strong>Definition:</strong> The difference between work completed (EV) and actual cost (AC). <br><strong>Purpose:</strong> Measures if you are under (positive $) or over (negative $) budget for the work performed.",
+                tooltip_spi: "<strong>Definition:</strong> A ratio of work completed to work planned (EV / PV). <br><strong>Purpose:</strong> Measures schedule efficiency. An SPI > 1.0 is ahead of schedule; < 1.0 is behind.",
+                tooltip_ppc: "<strong>Definition:</strong> A percentage of planned work that was actually completed ((EV / PV) * 100). <br><strong>Purpose:</strong> An intuitive measure of schedule attainment. Answers: 'What percentage of our plan did we achieve?'",
+                tooltip_cpi: "<strong>Definition:</strong> A ratio of work completed to actual cost (EV / AC). <br><strong>Purpose:</strong> Measures cost efficiency. A CPI > 1.0 means you're getting more value than you're spending.",
+                tooltip_spie: "<strong>Definition:</strong> A time-based schedule index (Earned Schedule / Data Date). <br><strong>Purpose:</strong> Provides a more reliable measure of schedule performance over the entire project, unlike traditional SPI.",
+                tooltip_durationChange: "<strong>Definition:</strong> The tangible result of SPI(t), expressed in months. <br><strong>Purpose:</strong> Directly answers the key question: 'How many months are we ahead or behind schedule?'",
+                tooltip_tcpi: "<strong>Definition:</strong> The required cost performance (CPI) for the rest of the project to finish on budget. <br><strong>Purpose:</strong> Acts as a reality check, showing how efficiently you must work to meet the original budget.",
+                tooltip_etc: "<strong>Definition:</strong> The forecasted cost to finish all remaining project work. <br><strong>Purpose:</strong> Essential for forecasting the funds required to complete the project from this point forward.",
+                tooltip_eac: "<strong>Definition:</strong> The new forecasted total cost of the project (AC + ETC). <br><strong>Purpose:</strong> Provides the new, most likely final cost of the project based on current performance.",
+                tooltip_vac: "<strong>Definition:</strong> The difference between the original budget (BAC) and the new forecasted cost (EAC). <br><strong>Purpose:</strong> Forecasts the total budget surplus (positive $) or deficit (negative $) at the end of the project.",
+                tooltip_eacForecastTitle: "<strong>Definition:</strong> A range of potential final project costs based on different performance assumptions (Optimistic, Most Likely, Pessimistic). <br><strong>Purpose:</strong> Provides a more realistic view of potential financial outcomes than a single-point EAC, helping stakeholders understand the project's financial risks and opportunities.",
+                tooltip_eacOptimistic: "<strong>Formula:</strong> AC + (BAC - EV) <br><strong>Assumption:</strong> Assumes the remaining work will be completed at the planned rate, ignoring past performance.",
+                tooltip_eacMostLikely: "<strong>Formula:</strong> AC + (BAC - EV) / CPI <br><strong>Assumption:</strong> Assumes future cost performance will be the same as past cost performance.",
+                tooltip_eacPessimistic: "<strong>Formula:</strong> AC + (BAC - EV) / (CPI * SPI) <br><strong>Assumption:</strong> Acknowledges that both cost and schedule performance will impact the final cost.",
+
+                // Status Indicators
+                status_ahead: "Ahead",
+                status_behind: "Behind",
+                status_underBudget: "Under Budget",
+                status_overBudget: "Over Budget",
+                status_onPlan: "On Plan",
+                status_behindPlan: "Behind Plan",
+                status_efficient: "Efficient",
+                status_inefficient: "Inefficient",
+                status_achievable: "Achievable",
+                status_atRisk: "At Risk",
+                status_surplus: "Surplus",
+                status_deficit: "Deficit"
+            },
+            ja: {
+                mainTitle: "アーンド・バリュー分析ダッシュボード",
+                subTitle: "リアルタイムのプロジェクト健全性評価と予測ツール",
+                inputsTitle: "プロジェクト情報と入力",
+                projectTitleLabel: "プロジェクト名",
+                projectTitlePlaceholder: "例：デジタルトランスフォーメーション",
+                projectManagerLabel: "プロジェクトマネージャー",
+                projectManagerPlaceholder: "例：山田太郎",
+                currencyLabel: "通貨記号",
+                bacLabel: "完成時総予算 (BAC)",
+                bacPlaceholder: "例：100000",
+                durationLabel: "プロジェクト期間 (月)",
+                durationPlaceholder: "例：12",
+                dataDateLabel: "データ測定日 (現在の月)",
+                dataDatePlaceholder: "例：6",
+                percentCompleteLabel: "物理的進捗率 (%)",
+                percentCompletePlaceholder: "例：45",
+                acLabel: "実コスト (AC)",
+                acPlaceholder: "例：55000",
+                evLabel: "アーンド・バリュー (EV)",
+                pvMethodLabel: "計画価値(PV)の計算方法",
+                pvCalculate: "計算する",
+                pvManual: "手動入力",
+                progressCurveLabel: "進捗曲線タイプ",
+                curveLinear: "線形 (デフォルト)",
+                curveSCurve: "Sカーブ",
+                curveFrontLoaded: "前倒し型",
+                curveBackLoaded: "後倒し型",
+                pvLabel: "計画価値 (PV)",
+                downloadPdfBtn: "PDFレポートをダウンロード",
+                clearBtn: "すべてクリア",
+                summaryTitle: "プロジェクト状況の概要",
+                analysisTitle: "分析結果",
+                narrativeTitle: "パフォーマンスに関する記述",
+                aiNote: "AIを活用し、プロジェクトデータに基づいた詳細な要約の生成、潜在的なリスクの特定、実用的な推奨事項を受け取ります。",
+                generateAiBtn: "✨ AI分析を生成",
+                narrativeInitial: "このAI搭載機能は、プロジェクトの健全性に関する専門的な要約を提供し、データに基づいた主要なリスクを特定し、実行可能な推奨事項を提示します。",
+                footerDev: "Geminiを使用して開発、PMBOKに準拠",
+                footerPrepared: "作成者: ハイサム - haissam.khan@airliquide.com",
+                statusInitial: "分析のために値を入力してください。",
+                statusDetailInitial: "計算にはすべての主要な入力フィールドが必要です。",
+                chartLabels: ['計画価値 (PV)', 'アーンド・バリュー (EV)', '実コスト (AC)'],
+                chartTitle: 'PV vs EV vs AC',
+                months: 'ヶ月',
+                aiReportsTitle: "AIレポートアシスタント",
+                aiReportsDesc: "ワンクリックで、さまざまなステークホルダー向けの状況報告書を作成します。AIがパフォーマンスに関する記述を選択した対象者向けの下書きに再フォーマットします。",
+                execSummaryBtn: "経営層向け要約を作成",
+                teamUpdateBtn: "チーム向け進捗報告を作成",
+                aiReportsInitial: "レポートタイプを選択して下書きを生成します。例えば、「経営層向け要約」は高レベルの成果と予算への影響に焦点を当て、「チーム向け進捗報告」はより詳細で行動指向の要約を提供します。",
+                copyBtn: "コピー",
+                copiedBtn: "コピー済み！",
+                // Metric cards
+                pctTimeUsed: "経過時間率 (%)",
+                pctBudgetUsed: "予算使用率 (%)",
+                sv: "スケジュール差異 (SV)",
+                cv: "コスト差異 (CV)",
+                spi: "スケジュール効率指数 (SPI)",
+                ppc: "計画達成率 (PPC)",
+                cpi: "コスト効率指数 (CPI)",
+                spie: "SPI(t) (アーンド・スケジュール)",
+                durationChange: "期間の変動",
+                tcpi: "残作業効率指数 (TCPI)",
+                etc: "残作業予測コスト (ETC)",
+                vac: "完成時差異 (VAC)",
+                // EAC Forecast
+                eacForecastTitle: "EAC予測レンジ",
+                eacOptimistic: "楽観的",
+                eacMostLikely: "最有力",
+                eacPessimistic: "悲観的",
+                // Tooltips
+                tooltip_pctTimeUsed: "<strong>定義:</strong> プロジェクトの計画期間のうち経過した割合。 <br><strong>目的:</strong> スケジュールパフォーマンスの背景を提供します。「タイムラインのどのくらい進んでいるか？」に答えます。",
+                tooltip_pctBudgetUsed: "<strong>定義:</strong> プロジェクト総予算(BAC)のうち、実際に使用された(AC)割合。 <br><strong>目的:</strong> コストパフォーマンスの背景を提供します。「総予算のどれだけを使ったか？」に答えます。",
+                tooltip_sv: "<strong>定義:</strong> 完成した作業(EV)と計画された作業(PV)の差。 <br><strong>目的:</strong> 金額ベースでスケジュールより進んでいるか(プラス)、遅れているか(マイナス)を測定します。",
+                tooltip_cv: "<strong>定義:</strong> 完成した作業(EV)と実コスト(AC)の差。 <br><strong>目的:</strong> 実行した作業に対して予算内か(プラス)、予算超過か(マイナス)を測定します。",
+                tooltip_spi: "<strong>定義:</strong> 計画された作業に対する完成した作業の比率(EV / PV)。 <br><strong>目的:</strong> スケジュール効率を測定します。SPIが1.0より大きい場合はスケジュールより進んでおり、1.0未満は遅れています。",
+                tooltip_ppc: "<strong>定義:</strong> 計画された作業のうち、実際に完了した割合((EV / PV) * 100)。 <br><strong>目的:</strong> スケジュール達成度を直感的に測定します。「計画の何パーセントを達成したか？」に答えます。",
+                tooltip_cpi: "<strong>定義:</strong> 実コストに対する完成した作業の比率(EV / AC)。 <br><strong>目的:</strong> コスト効率を測定します。CPIが1.0より大きい場合、費やした金額以上の価値を得ていることを意味します。",
+                tooltip_spie: "<strong>定義:</strong> 時間ベースのスケジュール指数(アーンド・スケジュール / データ測定日)。 <br><strong>目的:</strong> 従来のSPIとは異なり、プロジェクト全体にわたってより信頼性の高いスケジュールパフォーマンス測定を提供します。",
+                tooltip_durationChange: "<strong>定義:</strong> SPI(t)の具体的な結果を月数で示したもの。 <br><strong>目的:</strong> 「スケジュールから何ヶ月進んでいるか、または遅れているか？」という重要な問いに直接答えます。",
+                tooltip_etc: "<strong>定義:</strong> 残りのすべてのプロジェクト作業を完了するための予測コスト。 <br><strong>目的:</strong> この時点からプロジェクトを完了するために必要な資金を予測するために不可欠です。",
+                tooltip_tcpi: "<strong>定義:</strong> 当初の予算通りにプロジェクトを終えるために、残りの作業で要求されるコストパフォーマンス(CPI)。 <br><strong>目的:</strong> 当初の予算を達成するためにどれだけ効率的に作業する必要があるかを示す現実的な指標として機能します。",
+                tooltip_vac: "<strong>定義:</strong> 当初の予算(BAC)と新たな予測総コスト(EAC)の差。 <br><strong>目的:</strong> プロジェクト終了時の総予算の余剰(プラス)または不足(マイナス)を予測します。",
+                tooltip_eacForecastTitle: "<strong>定義:</strong> さまざまなパフォーマンスの前提（楽観的、最有力、悲観的）に基づいた、プロジェクトの最終的なコストの可能性のある範囲。 <br><strong>目的:</strong> 単一のEACよりも現実的な財務結果の可能性を提供し、関係者がプロジェクトの財務リスクと機会を理解するのに役立ちます。",
+                tooltip_eacOptimistic: "<strong>計算式:</strong> AC + (BAC - EV) <br><strong>前提:</strong> 過去の実績を無視し、残りの作業が計画通りに進むと仮定します。",
+                tooltip_eacMostLikely: "<strong>計算式:</strong> AC + (BAC - EV) / CPI <br><strong>前提:</strong> 将来のコストパフォーマンスが過去のパフォーマンスと同じであると仮定します。",
+                tooltip_eacPessimistic: "<strong>計算式:</strong> AC + (BAC - EV) / (CPI * SPI) <br><strong>前提:</strong> コストとスケジュールの両方のパフォーマンスが最終コストに影響すると認識します。",
+                // Status Indicators
+                status_ahead: "順調",
+                status_behind: "遅延",
+                status_underBudget: "予算内",
+                status_overBudget: "予算超過",
+                status_onPlan: "計画通り",
+                status_behindPlan: "計画遅延",
+                status_efficient: "効率的",
+                status_inefficient: "非効率",
+                status_achievable: "達成可能",
+                status_atRisk: "リスクあり",
+                status_surplus: "黒字予測",
+                status_deficit: "赤字予測"
+            }
+        };
+
+        // DOM Elements
+        const projectTitleInput = document.getElementById('project-title');
+        const projectManagerInput = document.getElementById('project-manager');
+        const currencySymbolInput = document.getElementById('currency-symbol');
+        const bacInput = document.getElementById('bac');
+        const durationInput = document.getElementById('duration');
+        const dataDateInput = document.getElementById('data-date');
+        const percentCompleteInput = document.getElementById('percent-complete');
+        const acInput = document.getElementById('ac');
+        const pvMethodRadios = document.querySelectorAll('input[name="pv-method"]');
+        const progressCurveSelect = document.getElementById('progress-curve');
+        const progressCurveWrapper = document.getElementById('progress-curve-wrapper');
+        const pvInput = document.getElementById('pv');
+        const evCalculatedInput = document.getElementById('ev-calculated');
+        const analysisGrid = document.getElementById('analysis-grid');
+        const interpretationDiv = document.getElementById('interpretation');
+        const statusText = document.getElementById('status-text');
+        const statusDetail = document.getElementById('status-detail');
+        const clearBtn = document.getElementById('clear-btn');
+        const downloadPdfBtn = document.getElementById('download-pdf-btn');
+        const chartCanvas = document.getElementById('evaChart');
+        const aiAnalysisBtn = document.getElementById('ai-analysis-btn');
+        const aiNarrativeContent = document.getElementById('ai-narrative-content');
+        const printTitle = document.getElementById('print-title');
+        const printSubtitle = document.getElementById('print-subtitle');
+        const printTitlePage2 = document.getElementById('print-title-page2');
+        const printSubtitlePage2 = document.getElementById('print-subtitle-page2');
+        const langToggle = document.getElementById('lang-toggle');
+        const aiReportsContainer = document.getElementById('ai-reports-container');
+        const aiReportOutput = document.getElementById('ai-report-output');
+        const execSummaryBtn = document.getElementById('exec-summary-btn');
+        const teamUpdateBtn = document.getElementById('team-update-btn');
+        const copyReportBtn = document.getElementById('copy-report-btn');
+
+        const inputs = [projectTitleInput, projectManagerInput, currencySymbolInput, bacInput, durationInput, dataDateInput, percentCompleteInput, acInput, pvInput, progressCurveSelect];
+        let evaChart = null;
+        let currentMetrics = {};
+
+        // Event Listeners
+        inputs.forEach(input => input.addEventListener('input', calculateEVA));
+        pvMethodRadios.forEach(radio => radio.addEventListener('change', togglePvMethod));
+        clearBtn.addEventListener('click', clearAll);
+        downloadPdfBtn.addEventListener('click', downloadPDF);
+        aiAnalysisBtn.addEventListener('click', generateAIAnalysis);
+        langToggle.addEventListener('change', (e) => {
+            setLanguage(e.target.checked ? 'ja' : 'en');
+        });
+        execSummaryBtn.addEventListener('click', () => generateAIReport('exec'));
+        teamUpdateBtn.addEventListener('click', () => generateAIReport('team'));
+        copyReportBtn.addEventListener('click', copyReportToClipboard);
+
+        // Initial state
+        initializeChart();
+        setLanguage('en');
+        
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            document.documentElement.lang = lang;
+            
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                const key = el.getAttribute('data-lang');
+                if (translations[lang][key]) {
+                    el.innerHTML = translations[lang][key];
+                }
+            });
+            
+             document.querySelectorAll('[data-lang-html]').forEach(el => {
+                const key = el.getAttribute('data-lang-html');
+                if (translations[lang][key]) {
+                    el.innerHTML = translations[lang][key];
+                }
+            });
+
+            document.querySelectorAll('[data-lang-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-lang-placeholder');
+                if (translations[lang][key]) {
+                    el.placeholder = translations[lang][key];
+                }
+            });
+
+            calculateEVA(); 
+        }
+
+        function togglePvMethod() {
+            const selectedMethod = document.querySelector('input[name="pv-method"]:checked').value;
+            if (selectedMethod === 'auto') {
+                pvInput.readOnly = true;
+                pvInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+                pvInput.classList.remove('bg-white');
+                progressCurveWrapper.style.display = 'block';
+                durationInput.disabled = false;
+                dataDateInput.disabled = false;
+            } else {
+                pvInput.readOnly = false;
+                pvInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                pvInput.classList.add('bg-white');
+                progressCurveWrapper.style.display = 'none';
+                durationInput.disabled = true;
+                dataDateInput.disabled = true;
+            }
+            calculateEVA();
+        }
+
+        function formatValue(value, type, currencySymbol = '$') {
+            if (isNaN(value) || !isFinite(value)) return '-';
+            const lang = currentLanguage === 'ja' ? 'ja-JP' : 'en-US';
+            switch(type) {
+                case 'currency':
+                    return `${currencySymbol}${(value).toLocaleString(lang, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                case 'percent':
+                     return `${(value).toFixed(2)}%`;
+                case 'decimal':
+                    return value.toFixed(2);
+                case 'months':
+                    return `${value.toFixed(2)} ${translations[currentLanguage].months}`;
+                default:
+                    return value;
+            }
+        }
+        
+        function createMetricCard(titleKey, value, formula, type, currencySymbol) {
+            const title = translations[currentLanguage][titleKey];
+            const tooltipText = translations[currentLanguage]['tooltip_' + titleKey];
+
+            let formattedValue = formatValue(value, type, currencySymbol);
+            let valueColor = 'text-gray-900';
+            let statusKey = '';
+            let statusText = '';
+            let statusBgColor = 'bg-gray-100 text-gray-800';
+
+            if(type === 'currency' && (titleKey.includes('sv') || titleKey.includes('cv') || titleKey.includes('vac') || titleKey.includes('durationChange'))) {
+                if (value < 0) valueColor = 'text-red-600';
+                if (value >= 0) valueColor = 'text-green-600';
+            }
+             if(type === 'decimal' && (titleKey.includes('spi') || titleKey.includes('cpi') || titleKey.includes('spie') || titleKey.includes('tcpi'))) {
+                if (value < 1) valueColor = 'text-red-600';
+                if (value >= 1) valueColor = 'text-green-600';
+            }
+             if(type === 'percent' && (titleKey.includes('ppc'))) {
+                if (value < 100) valueColor = 'text-red-600';
+                if (value >= 100) valueColor = 'text-green-600';
+            }
+
+            switch (titleKey) {
+                case 'sv':
+                case 'spi':
+                case 'spie':
+                case 'durationChange':
+                    statusKey = value >= (titleKey === 'sv' || titleKey === 'durationChange' ? 0 : 1) ? 'ahead' : 'behind';
+                    break;
+                case 'cv':
+                    statusKey = value >= 0 ? 'underBudget' : 'overBudget';
+                    break;
+                case 'ppc':
+                    statusKey = value >= 100 ? 'onPlan' : 'behindPlan';
+                    break;
+                case 'cpi':
+                    statusKey = value >= 1 ? 'efficient' : 'inefficient';
+                    break;
+                case 'tcpi':
+                    if (isFinite(value)) {
+                        statusKey = value <= 1 ? 'achievable' : 'atRisk';
+                    }
+                    break;
+                case 'vac':
+                    statusKey = value >= 0 ? 'surplus' : 'deficit';
+                    break;
+            }
+
+            if (statusKey && isFinite(value)) {
+                statusText = translations[currentLanguage][`status_${statusKey}`];
+                const goodStatuses = ['ahead', 'underBudget', 'onPlan', 'efficient', 'achievable', 'surplus'];
+                
+                if (goodStatuses.includes(statusKey)) {
+                    statusBgColor = 'bg-green-100 text-green-800';
+                } else { // All other statuses are "bad" or "warning"
+                    statusBgColor = 'bg-red-100 text-red-800';
+                }
+            }
+
+            const statusHtml = statusText 
+                ? `<span class="px-2 py-0.5 text-xs font-medium rounded-full ${statusBgColor}">${statusText}</span>` 
+                : '<span></span>';
+
+            return `
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 min-h-[125px] flex flex-col justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 flex items-center justify-between">
+                            ${title}
+                            <span class="tooltip-trigger">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400 hover:text-indigo-600"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                <span class="tooltip-content">${tooltipText}</span>
+                            </span>
+                        </p>
+                        <p class="text-2xl font-bold ${valueColor} break-words">${formattedValue}</p>
+                    </div>
+                    <div class="flex justify-between items-end mt-1">
+                        <p class="text-xs text-gray-400">${formula}</p>
+                        ${statusHtml}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function createEACForecastCard(eacOptimistic, eacMostLikely, eacPessimistic, currencySymbol) {
+            const title = translations[currentLanguage].eacForecastTitle;
+            const optimisticTitle = translations[currentLanguage].eacOptimistic;
+            const mostLikelyTitle = translations[currentLanguage].eacMostLikely;
+            const pessimisticTitle = translations[currentLanguage].eacPessimistic;
+
+            const titleTooltip = translations[currentLanguage].tooltip_eacForecastTitle;
+            const optimisticTooltip = translations[currentLanguage].tooltip_eacOptimistic;
+            const mostLikelyTooltip = translations[currentLanguage].tooltip_eacMostLikely;
+            const pessimisticTooltip = translations[currentLanguage].tooltip_eacPessimistic;
+
+            return `
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 sm:col-span-2 lg:col-span-1 xl:col-span-2">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-sm font-semibold text-gray-600">${title}</h3>
+                        <span class="tooltip-trigger">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400 hover:text-indigo-600"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                            <span class="tooltip-content">${titleTooltip}</span>
+                        </span>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <p class="text-sm text-gray-500 flex items-center">
+                                ${optimisticTitle}
+                                <span class="tooltip-trigger ml-1.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                    <span class="tooltip-content">${optimisticTooltip}</span>
+                                </span>
+                            </p>
+                            <p class="font-bold text-gray-900">${formatValue(eacOptimistic, 'currency', currencySymbol)}</p>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <p class="text-sm text-gray-500 flex items-center">
+                                ${mostLikelyTitle}
+                                <span class="tooltip-trigger ml-1.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                    <span class="tooltip-content">${mostLikelyTooltip}</span>
+                                </span>
+                            </p>
+                            <p class="font-bold text-lg text-indigo-600">${formatValue(eacMostLikely, 'currency', currencySymbol)}</p>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <p class="text-sm text-gray-500 flex items-center">
+                                ${pessimisticTitle}
+                                <span class="tooltip-trigger ml-1.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                    <span class="tooltip-content">${pessimisticTooltip}</span>
+                                </span>
+                            </p>
+                            <p class="font-bold text-gray-900">${formatValue(eacPessimistic, 'currency', currencySymbol)}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+
+        function calculateEVA() {
+            const currencySymbol = currencySymbolInput.value || '$';
+            const bac = parseFloat(bacInput.value);
+            const duration = parseFloat(durationInput.value);
+            const dataDate = parseFloat(dataDateInput.value);
+            const percentComplete = parseFloat(percentCompleteInput.value);
+            const ac = parseFloat(acInput.value);
+            const pvMethod = document.querySelector('input[name="pv-method"]:checked').value;
+            const curveType = progressCurveSelect.value;
+            const projectTitle = projectTitleInput.value;
+            const projectManager = projectManagerInput.value;
+
+            const ev = bac * (percentComplete / 100);
+            evCalculatedInput.value = isNaN(ev) ? '' : formatValue(ev, 'currency', currencySymbol);
+            
+            let pv;
+            if (pvMethod === 'auto' && duration > 0 && dataDate >= 0) {
+                 const t = Math.min(1, Math.max(0, dataDate / duration));
+                 switch(curveType) {
+                    case 's-curve': pv = bac * (t * t * (3 - 2 * t)); break;
+                    case 'front-loaded': pv = bac * Math.sqrt(t); break;
+                    case 'back-loaded': pv = bac * t**2; break;
+                    default: pv = bac * t; break;
+                 }
+                 pvInput.value = isNaN(pv) ? '' : pv.toFixed(2);
+            } else {
+                 pv = parseFloat(pvInput.value);
+            }
+
+            const sv = ev - pv;
+            const cv = ev - ac;
+            const spi = pv !== 0 ? ev / pv : 0;
+            const cpi = ac !== 0 ? ev / ac : 0;
+            const ppc = pv !== 0 ? (ev / pv) * 100 : 0;
+            const etc = cpi !== 0 ? (bac - ev) / cpi : Infinity;
+            const vac = bac - (ac + etc);
+            const tcpi = (bac - ac) !== 0 ? (bac - ev) / (bac - ac) : Infinity;
+            const pctTimeUsed = !isNaN(duration) && !isNaN(dataDate) && duration > 0 ? (dataDate / duration) * 100 : NaN;
+            const pctBudgetUsed = !isNaN(bac) && !isNaN(ac) && bac > 0 ? (ac / bac) * 100 : NaN;
+            const earnedSchedule = !isNaN(bac) && !isNaN(ev) && !isNaN(duration) && bac > 0 ? (ev / bac) * duration : NaN;
+            const spie = !isNaN(earnedSchedule) && !isNaN(dataDate) && dataDate > 0 ? earnedSchedule / dataDate : NaN;
+            const durationChange = earnedSchedule - dataDate;
+
+            // EAC Calculations
+            const eacMostLikely = ac + etc;
+            const eacOptimistic = ac + (bac - ev);
+            const eacPessimistic = (cpi > 0 && spi > 0) ? ac + (bac - ev) / (cpi * spi) : Infinity;
+
+            
+            analysisGrid.innerHTML = `
+                ${createMetricCard('pctTimeUsed', pctTimeUsed, 'Data Date / Duration', 'percent', currencySymbol)}
+                ${createMetricCard('pctBudgetUsed', pctBudgetUsed, 'AC / BAC', 'percent', currencySymbol)}
+                ${createMetricCard('sv', sv, 'EV - PV', 'currency', currencySymbol)}
+                ${createMetricCard('cv', cv, 'EV - AC', 'currency', currencySymbol)}
+                ${createMetricCard('spi', spi, 'EV / PV', 'decimal', currencySymbol)}
+                ${createMetricCard('ppc', ppc, '(EV / PV) * 100', 'percent', currencySymbol)}
+                ${createMetricCard('cpi', cpi, 'EV / AC', 'decimal', currencySymbol)}
+                ${createMetricCard('spie', spie, 'ES / Data Date', 'decimal', currencySymbol)}
+                ${createMetricCard('durationChange', durationChange, 'ES - Data Date', 'months', currencySymbol)}
+                ${createMetricCard('tcpi', tcpi, '(BAC - EV) / (BAC - AC)', 'decimal', currencySymbol)}
+                ${createMetricCard('etc', etc, '(BAC - EV) / CPI', 'currency', currencySymbol)}
+                ${createEACForecastCard(eacOptimistic, eacMostLikely, eacPessimistic, currencySymbol)}
+                ${createMetricCard('vac', vac, 'BAC - EAC', 'currency', currencySymbol)}
+            `;
+            
+            initializeTooltips();
+
+            const allInputsValid = !isNaN(bac) && bac > 0 && !isNaN(ev) && !isNaN(pv) && !isNaN(ac);
+
+            const missingFieldsForAI = [];
+            if (!projectTitle) missingFieldsForAI.push(translations[currentLanguage].projectTitleLabel);
+            if (!projectManager) missingFieldsForAI.push(translations[currentLanguage].projectManagerLabel);
+            
+            const allRequiredForAIValid = allInputsValid && projectTitle && projectManager;
+            
+            aiAnalysisBtn.disabled = !allRequiredForAIValid;
+            downloadPdfBtn.disabled = !allInputsValid;
+            
+            if (aiAnalysisBtn.disabled && allInputsValid) {
+                let missingText = 'Please complete the following fields: ';
+                if(currentLanguage === 'ja') missingText = '次のフィールドを入力してください: ';
+                aiAnalysisBtn.setAttribute('title', missingText + missingFieldsForAI.join(', '));
+            } else {
+                aiAnalysisBtn.removeAttribute('title');
+            }
+            if (downloadPdfBtn.disabled) {
+                let missingText = 'Please complete all core project metrics to enable PDF download.';
+                if(currentLanguage === 'ja') missingText = 'PDFをダウンロードするには、すべての主要なプロジェクトメトリクスを入力してください。';
+                downloadPdfBtn.setAttribute('title', missingText);
+            } else {
+                downloadPdfBtn.removeAttribute('title');
+            }
+            
+            updateChart(allInputsValid ? [pv, ev, ac] : [0, 0, 0], currencySymbol);
+            
+            if (allInputsValid) {
+                currentMetrics = { projectTitle, projectManager, currencySymbol, bac, percentComplete, ev, pv, ac, sv, cv, spi, cpi, eac: eacMostLikely, etc, vac, tcpi, duration, dataDate, pctTimeUsed, pctBudgetUsed, spie, durationChange, ppc, eacOptimistic, eacPessimistic };
+                updateInterpretation(spi, cpi, sv, cv, vac, tcpi, currencySymbol);
+            } else {
+                interpretationDiv.className = 'p-4 rounded-lg flex flex-col justify-center transition-all duration-300 bg-gray-100';
+                statusText.textContent = translations[currentLanguage].statusInitial;
+                statusDetail.textContent = translations[currentLanguage].statusDetailInitial;
+                currentMetrics = {};
+            }
+        }
+
+        function updateInterpretation(spi, cpi, sv, cv, vac, tcpi, currencySymbol) {
+            let status = '';
+            let narrative = '';
+            let bgColor = 'bg-gray-100';
+            const onSchedule = spi >= 1;
+            const onBudget = cpi >= 1;
+            
+            if(currentLanguage === 'en') {
+                 if (onSchedule && onBudget) {
+                    status = 'Excellent Performance';
+                    narrative = `Project is ahead of schedule by ${formatValue(sv, 'currency', currencySymbol)} and under budget by ${formatValue(cv, 'currency', currencySymbol)}. Forecast suggests a final budget surplus of ${formatValue(vac, 'currency', currencySymbol)}.`;
+                    bgColor = 'bg-green-100';
+                } else if (!onSchedule && !onBudget) {
+                    status = 'Project At Risk';
+                    narrative = `Project is behind schedule by ${formatValue(Math.abs(sv), 'currency', currencySymbol)} and over budget by ${formatValue(Math.abs(cv), 'currency', currencySymbol)}. Immediate corrective action is required.`;
+                     bgColor = 'bg-red-100';
+                } else if (!onSchedule && onBudget) {
+                    status = 'Behind Schedule, Under Budget';
+                    narrative = `While under budget by ${formatValue(cv, 'currency', currencySymbol)}, the project is behind schedule by ${formatValue(Math.abs(sv), 'currency', currencySymbol)}. Focus on schedule recovery.`;
+                     bgColor = 'bg-yellow-100';
+                } else { 
+                    status = 'Ahead of Schedule, Over Budget';
+                    narrative = `Progress is ahead of schedule by ${formatValue(sv, 'currency', currencySymbol)}, but the project is over budget by ${formatValue(Math.abs(cv), 'currency', currencySymbol)}. Cost control is necessary.`;
+                     bgColor = 'bg-yellow-100';
+                }
+                if (isFinite(tcpi) && tcpi > 0) {
+                     narrative += ` The required CPI for the remaining work to meet the original budget is ${tcpi.toFixed(2)}.`
+                }
+            } else { // Japanese
+                 if (onSchedule && onBudget) {
+                    status = '優れたパフォーマンス';
+                    narrative = `プロジェクトはスケジュールより ${formatValue(sv, 'currency', currencySymbol)} 進んでおり、予算は ${formatValue(cv, 'currency', currencySymbol)} 下回っています。予測では、最終的に ${formatValue(vac, 'currency', currencySymbol)} の予算余剰が見込まれます。`;
+                    bgColor = 'bg-green-100';
+                } else if (!onSchedule && !onBudget) {
+                    status = 'プロジェクトにリスクあり';
+                    narrative = `プロジェクトはスケジュールより ${formatValue(Math.abs(sv), 'currency', currencySymbol)} 遅れており、予算は ${formatValue(Math.abs(cv), 'currency', currencySymbol)} 超過しています。早急な是正措置が必要です。`;
+                     bgColor = 'bg-red-100';
+                } else if (!onSchedule && onBudget) {
+                    status = 'スケジュール遅延、予算内';
+                    narrative = `予算は ${formatValue(cv, 'currency', currencySymbol)} 下回っていますが、プロジェクトはスケジュールより ${formatValue(Math.abs(sv), 'currency', currencySymbol)} 遅れています。スケジュールの回復に集中する必要があります。`;
+                     bgColor = 'bg-yellow-100';
+                } else { 
+                    status = 'スケジュール前倒し、予算超過';
+                    narrative = `進捗はスケジュールより ${formatValue(sv, 'currency', currencySymbol)} 進んでいますが、プロジェクトは ${formatValue(Math.abs(cv), 'currency', currencySymbol)} の予算超過です。コスト管理が必要です。`;
+                     bgColor = 'bg-yellow-100';
+                }
+                if (isFinite(tcpi) && tcpi > 0) {
+                     narrative += ` 当初の予算を達成するために残りの作業で必要なCPIは ${tcpi.toFixed(2)} です。`
+                }
+            }
+            
+            interpretationDiv.className = `p-4 rounded-lg flex flex-col justify-center transition-all duration-300 ${bgColor}`;
+            statusText.textContent = status;
+            statusDetail.textContent = narrative;
+        }
+        
+        async function downloadPDF() {
+            const printableArea = document.getElementById('printable-area');
+            const title = currentMetrics.projectTitle || 'EVA-Report';
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const originalBodyBg = document.body.style.backgroundColor;
+            
+            downloadPdfBtn.disabled = true;
+            downloadPdfBtn.innerText = 'Generating...';
+
+            // --- Pre-render setup ---
+            document.body.classList.add('print-mode');
+            document.body.style.backgroundColor = '#fff';
+            printableArea.style.width = '1200px'; 
+
+            const reportDateText = `Report Date: ${new Date().toLocaleDateString()}`;
+            const subtitleText = `Project Manager: ${currentMetrics.projectManager || 'N/A'} | ${reportDateText}`;
+            
+            document.querySelectorAll('#print-title, #print-title-page2').forEach(el => el.textContent = currentMetrics.projectTitle || "EVA Report");
+            document.querySelectorAll('#print-subtitle, #print-subtitle-page2').forEach(el => el.textContent = subtitleText);
+
+            try {
+                const page1 = document.getElementById('pdf-page-1');
+                const page2 = document.getElementById('pdf-page-2');
+                const margin = 10;
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const contentWidth = pdfWidth - (margin * 2);
+
+                const canvas1 = await html2canvas(page1, { scale: 2, windowWidth: 1200 });
+                const imgData1 = canvas1.toDataURL('image/png');
+                let imgHeight1 = (canvas1.height * contentWidth) / canvas1.width;
+                let pageHeight = pdf.internal.pageSize.getHeight();
+                let heightLeft = imgHeight1;
+                let position = margin;
+
+                pdf.addImage(imgData1, 'PNG', margin, position, contentWidth, imgHeight1);
+                heightLeft -= (pageHeight - margin * 2);
+
+                while (heightLeft > 0) {
+                    pdf.addPage();
+                    position = margin - heightLeft;
+                    pdf.addImage(imgData1, 'PNG', margin, position, contentWidth, imgHeight1);
+                    heightLeft -= (pageHeight - margin * 2);
+                }
+
+                if (aiNarrativeContent.innerText.includes('Project Performance Analysis') || aiNarrativeContent.innerText.includes('プロジェクトパフォーマンス分析')) {
+                    pdf.addPage();
+                    const canvas2 = await html2canvas(page2, { scale: 2, windowWidth: 1200 });
+                    const imgData2 = canvas2.toDataURL('image/png');
+                    const imgHeight2 = (canvas2.height * contentWidth) / canvas2.width;
+                    pdf.addImage(imgData2, 'PNG', margin, margin, contentWidth, imgHeight2);
+                }
+                
+                const pageCount = pdf.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    pdf.setPage(i);
+                    pdf.setFontSize(8);
+                    pdf.setTextColor(100);
+                    pdf.text('CONFIDENTIAL INTERNAL', pdfWidth / 2, pageHeight - (margin / 2), { align: 'center' });
+                }
+
+                pdf.save(`${title.replace(/ /g,"_")}.pdf`);
+
+            } catch (error) {
+                console.error("Error generating PDF:", error);
+                alert("Sorry, there was an error generating the PDF. Please check the console.");
+            } finally {
+                // --- Cleanup ---
+                document.body.classList.remove('print-mode');
+                printableArea.style.width = '';
+                document.body.style.backgroundColor = originalBodyBg;
+                downloadPdfBtn.disabled = false;
+                downloadPdfBtn.innerText = translations[currentLanguage].downloadPdfBtn;
+            }
+        }
+
+        async function generateAIAnalysis() {
+            if (Object.keys(currentMetrics).length === 0) { return; }
+            aiAnalysisBtn.disabled = true;
+            aiAnalysisBtn.innerHTML = `...`;
+            aiNarrativeContent.innerHTML = '<p>Generating...</p>';
+            aiReportsContainer.classList.add('hidden');
+            aiReportOutput.innerHTML = translations[currentLanguage].aiReportsInitial;
+
+            let userQuery = `Analyze the following project data: ${JSON.stringify(currentMetrics)}.`;
+            if (currentLanguage === 'ja') {
+                userQuery += " Please provide the full analysis in professional, business-level Japanese.";
+            }
+            
+            try {
+                const response = await callGeminiAPI(userQuery, 'json');
+                const jsonText = response.candidates[0].content.parts[0].text;
+                const parsedData = JSON.parse(jsonText);
+                fullPerformanceNarrative = parsedData; 
+                renderAINarrative(parsedData);
+                aiReportsContainer.classList.remove('hidden');
+            } catch (error) {
+                console.error('Error calling or parsing Gemini API:', error);
+                aiNarrativeContent.innerHTML = '<p>Sorry, an error occurred during the analysis. Please check your API key and the console.</p>';
+            } finally {
+                aiAnalysisBtn.disabled = false;
+                aiAnalysisBtn.innerHTML = translations[currentLanguage].generateAiBtn;
+            }
+        }
+        
+        async function generateAIReport(reportType) {
+            if (!fullPerformanceNarrative) return;
+            
+            const buttons = [execSummaryBtn, teamUpdateBtn];
+            buttons.forEach(btn => btn.disabled = true);
+            aiReportOutput.innerHTML = '<p>Generating report...</p>';
+            copyReportBtn.classList.add('hidden');
+
+            const projectTitle = currentMetrics.projectTitle || "the project";
+
+            let prompt;
+            if (currentLanguage === 'en') {
+                if (reportType === 'exec') {
+                    prompt = `Based on the following detailed project analysis for the project titled "${projectTitle}", please draft a concise, high-level email summary for an executive leadership team. Focus on the overall project status (Good, Warning, At Risk), the key budget and schedule implications, and the most critical recommendations. Omit deep technical details. \n\nANALYSIS:\n${JSON.stringify(fullPerformanceNarrative)}`;
+                } else { // team
+                    prompt = `Based on the following detailed project analysis for the project titled "${projectTitle}", please draft a detailed, action-oriented status update for the internal project team. Clearly state the current SPI and CPI, explain what they mean in practical terms, and list the specific recommendations the team should focus on. \n\nANALYSIS:\n${JSON.stringify(fullPerformanceNarrative)}`;
+                }
+            } else { // Japanese
+                if(reportType === 'exec'){
+                    prompt = `以下の詳細なプロジェクト分析に基づき、プロジェクト名「${projectTitle}」のエグゼクティブリーダーシップチーム向けの簡潔で高レベルなメール要約を作成してください。プロジェクト全体のステータス（良好、警告、リスクあり）、主要な予算とスケジュールの影響、そして最も重要な推奨事項に焦点を当ててください。技術的な詳細は省略してください。\n\n分析：\n${JSON.stringify(fullPerformanceNarrative)}`;
+                } else { // team
+                    prompt = `以下の詳細なプロジェクト分析に基づき、プロジェクト名「${projectTitle}」の内部プロジェクトチーム向けの詳細で行動指向の進捗報告を作成してください。現在のSPIとCPIを明確に述べ、それらが実務上何を意味するかを説明し、チームが焦点を当てるべき具体的な推奨事項をリストアップしてください。\n\n分析：\n${JSON.stringify(fullPerformanceNarrative)}`;
+                }
+            }
+
+            try {
+                const response = await callGeminiAPI(prompt, 'text');
+                const reportText = response.candidates[0].content.parts[0].text;
+                aiReportOutput.innerText = reportText; // Use innerText to preserve formatting for copy
+                copyReportBtn.classList.remove('hidden');
+            } catch(error) {
+                console.error('Error generating AI report:', error);
+                aiReportOutput.innerHTML = '<p>Sorry, an error occurred while generating the report.</p>';
+            } finally {
+                buttons.forEach(btn => btn.disabled = false);
+            }
+        }
+
+        function copyReportToClipboard() {
+            const reportText = aiReportOutput.innerText;
+            navigator.clipboard.writeText(reportText).then(() => {
+                copyReportBtn.innerHTML = translations[currentLanguage].copiedBtn;
+                setTimeout(() => {
+                     copyReportBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
+                }, 2000);
+            });
+        }
+
+        function renderAINarrative(data) {
+            const { projectTitle, projectManager } = currentMetrics;
+            const { projectStatus, projectPhaseAnalysis, scheduleAnalysis, costAnalysis, recommendations } = data;
+            let statusTagColor = 'bg-gray-400';
+            if (projectStatus.toLowerCase().includes('good') || projectStatus.includes('良好')) statusTagColor = 'bg-green-500';
+            if (projectStatus.toLowerCase().includes('warning') || projectStatus.includes('警告')) statusTagColor = 'bg-yellow-500';
+            if (projectStatus.toLowerCase().includes('at risk') || projectStatus.includes('リスクあり')) statusTagColor = 'bg-red-500';
+            
+            const recommendationsHtml = recommendations.map(rec => `<li>${rec}</li>`).join('');
+
+            const titleText = currentLanguage === 'ja' ? 'プロジェクトパフォーマンス分析' : 'Project Performance Analysis';
+            const projectText = currentLanguage === 'ja' ? 'プロジェクト' : 'Project';
+            const managerText = currentLanguage === 'ja' ? 'マネージャー' : 'Manager';
+            const phaseTitle = currentLanguage === 'ja' ? 'プロジェクトフェーズ分析' : 'Project Phase Analysis';
+            const scheduleTitle = currentLanguage === 'ja' ? 'スケジュール分析' : 'Schedule Analysis';
+            const costTitle = currentLanguage === 'ja' ? 'コスト分析' : 'Cost Analysis';
+            const recsTitle = currentLanguage === 'ja' ? '推奨事項' : 'Recommendations';
+
+            aiNarrativeContent.innerHTML = `
+                <div class="space-y-4 text-gray-800">
+                    <div>
+                        <h3 class="font-bold text-lg flex items-center">${titleText}
+                            <span class="ml-3 px-3 py-1 text-xs font-semibold text-white ${statusTagColor} rounded-full">${projectStatus.toUpperCase()}</span>
+                        </h3>
+                        <p class="text-sm text-gray-600"><strong>${projectText}:</strong> ${projectTitle} | <strong>${managerText}:</strong> ${projectManager}</p>
+                    </div>
+                    <div><h4 class="font-semibold text-md">${phaseTitle}</h4><p>${projectPhaseAnalysis}</p></div>
+                    <div><h4 class="font-semibold text-md">${scheduleTitle}</h4><p>${scheduleAnalysis}</p></div>
+                    <div><h4 class="font-semibold text-md">${costTitle}</h4><p>${costAnalysis}</p></div>
+                    <div><h4 class="font-semibold text-md">${recsTitle}</h4><ul class="list-disc list-inside space-y-1">${recommendationsHtml}</ul></div>
+                </div>`;
+        }
+
+        async function callGeminiAPI(userQuery, responseType = 'json') {
+            const apiKey = ""; // API key is handled by the Canvas environment.
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            
+            let payload = {
+                contents: [{ parts: [{ text: userQuery }] }]
+            };
+
+            if (responseType === 'json') {
+                payload.generationConfig = {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            projectStatus: { type: "STRING" },
+                            projectPhaseAnalysis: { type: "STRING" },
+                            scheduleAnalysis: { type: "STRING" },
+                            costAnalysis: { type: "STRING" },
+                            recommendations: { type: "ARRAY", items: { type: "STRING" } }
+                        },
+                        required: ["projectStatus", "projectPhaseAnalysis", "scheduleAnalysis", "costAnalysis", "recommendations"]
+                    }
+                }
+            }
+
+            // Using exponential backoff for retries is a good practice for production apps
+            let response;
+            for (let i = 0; i < 3; i++) {
+                try {
+                    response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (response.ok) {
+                        return await response.json();
+                    }
+                    if (response.status >= 500) { // Retry on server errors
+                        throw new Error(`API server error with status ${response.status}`);
+                    }
+                     // Don't retry on client errors (like 400 Bad Request)
+                    throw new Error(`API request failed with status ${response.status}`);
+                } catch (error) {
+                    if (i === 2) throw error;
+                    await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+                }
+            }
+        }
+        
+        // FIX: This new function will handle smart tooltip positioning
+        function initializeTooltips() {
+            document.querySelectorAll('.tooltip-trigger').forEach(trigger => {
+                trigger.addEventListener('mouseover', () => {
+                    const tooltip = trigger.querySelector('.tooltip-content');
+                    if (tooltip) {
+                        const rect = tooltip.getBoundingClientRect();
+                        if (rect.right > window.innerWidth) {
+                            tooltip.classList.add('align-left');
+                        }
+                    }
+                });
+                trigger.addEventListener('mouseout', () => {
+                    const tooltip = trigger.querySelector('.tooltip-content');
+                    if (tooltip) {
+                        tooltip.classList.remove('align-left');
+                    }
+                });
+            });
+        }
+        
+        function initializeChart() {
+            const ctx = chartCanvas.getContext('2d');
+            evaChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: translations[currentLanguage].chartLabels,
+                    datasets: [{
+                        label: 'Project Metrics', data: [0, 0, 0],
+                        backgroundColor: ['rgba(107, 114, 128, 0.6)', 'rgba(59, 130, 246, 0.6)', 'rgba(239, 68, 68, 0.6)'],
+                        borderColor: ['rgba(107, 114, 128, 1)', 'rgba(59, 130, 246, 1)', 'rgba(239, 68, 68, 1)'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false }, 
+                        title: { display: true, text: translations[currentLanguage].chartTitle, font: { size: 16, weight: '600' } } 
+                    },
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { 
+                                callback: function(value) { return (currentMetrics.currencySymbol || '$') + value.toLocaleString(); } 
+                            } 
+                        } 
+                    }
+                }
+            });
+        }
+
+        function updateChart(data, currencySymbol) { 
+            if (evaChart) { 
+                evaChart.data.labels = translations[currentLanguage].chartLabels;
+                evaChart.options.plugins.title.text = translations[currentLanguage].chartTitle;
+                evaChart.data.datasets[0].data = data; 
+                evaChart.options.scales.y.ticks.callback = function(value) { return (currencySymbol || '$') + value.toLocaleString(); };
+                evaChart.update(); 
+            } 
+        }
+
+        function clearAll() { 
+            inputs.forEach(input => { 
+                if(input.id === 'currency-symbol') { input.value = '$';
+                } else if(input.id === 'progress-curve') { input.value = 'linear';
+                } else if(input.type !== 'radio') {
+                     input.value = ""; 
+                }
+            });
+            document.querySelector('input[name="pv-method"][value="auto"]').checked = true;
+            togglePvMethod();
+            calculateEVA();
+            aiNarrativeContent.innerHTML = translations[currentLanguage].narrativeInitial;
+            aiReportsContainer.classList.add('hidden');
+            aiReportOutput.innerHTML = translations[currentLanguage].aiReportsInitial;
+        }
+    </script>
+</body>
+</html>
