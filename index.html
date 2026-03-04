@@ -251,11 +251,14 @@
                     <div class="non-printable">
                         <p class="text-sm text-gray-600 mt-4" data-lang="aiNote"></p>
                         <button id="ai-analysis-btn" data-lang="generateAiBtn" class="mt-4 w-full md:w-auto py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow disabled:bg-indigo-300 disabled:cursor-not-allowed">
-                            ✨ Generate AI Analysis
+                            ✨ Generate Smart Analysis
                         </button>
                     </div>
-                    <div id="ai-narrative-container" class="p-4 rounded-lg bg-gray-100 min-h-[100px] mt-4">
+                    <div id="ai-narrative-container" class="relative p-4 rounded-lg bg-gray-100 min-h-[100px] mt-4">
                         <div id="ai-narrative-content" class="text-sm text-gray-700" data-lang-html="narrativeInitial"></div>
+                        <button id="copy-narrative-btn" class="absolute top-2 right-2 p-1.5 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors hidden non-printable">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -283,7 +286,7 @@
     
     <footer class="text-center text-sm text-gray-500 mt-12 mb-4">
         <p class="flex items-center justify-center space-x-1">
-            <span data-lang="footerDev">Developed with Gemini, following PMBOK</span>
+            <span data-lang="footerDev">Developed with Gemini following PMBOK</span>
           </p>
         <p data-lang="footerPrepared">Prepared by Haissam - engr.haissam@gmail.com</p>
     </footer>
@@ -332,18 +335,18 @@
                 summaryTitle: "Project Status Summary",
                 analysisTitle: "Analysis Results",
                 narrativeTitle: "Performance Narrative",
-                aiNote: "Leverage AI to generate a detailed summary, identify potential risks, and receive actionable recommendations based on your project data.",
-                generateAiBtn: "✨ Generate AI Analysis",
-                narrativeInitial: "This AI-powered feature provides a professional summary of your project's health, identifies key risks based on the data, and offers actionable recommendations.",
-                footerDev: "Developed with Gemini, following PMBOK",
+                aiNote: "Leverage smart algorithms to generate a detailed summary, identify potential risks, and receive actionable recommendations based on your project data.",
+                generateAiBtn: "✨ Generate Smart Analysis",
+                narrativeInitial: "This feature provides a professional summary of your project's health, identifies key risks based on the data, and offers actionable recommendations.",
+                footerDev: "Developed with Gemini following PMBOK",
                 footerPrepared: "Prepared by Haissam - engr.haissam@gmail.com",
                 statusInitial: "Enter values for analysis.",
                 statusDetailInitial: "All core input fields are required for calculation.",
                 chartLabels: ['Planned Value (PV)', 'Earned Value (EV)', 'Actual Cost (AC)'],
                 chartTitle: 'PV vs EV vs AC',
                 months: 'months',
-                aiReportsTitle: "AI Report Assistant",
-                aiReportsDesc: "Generate tailored status updates for different stakeholders with one click. The AI will reformat the performance narrative into a draft suitable for the selected audience.",
+                aiReportsTitle: "Report Assistant",
+                aiReportsDesc: "Generate tailored status updates for different stakeholders with one click. The system will reformat the performance narrative into a draft suitable for the selected audience.",
                 execSummaryBtn: "Draft Executive Summary",
                 teamUpdateBtn: "Draft Team Update",
                 aiReportsInitial: "Select a report type to generate a draft. For example, the \"Executive Summary\" will focus on high-level outcomes and budget implications, while the \"Team Update\" will provide a more detailed, action-oriented summary.",
@@ -434,18 +437,18 @@
                 summaryTitle: "プロジェクト状況の概要",
                 analysisTitle: "分析結果",
                 narrativeTitle: "パフォーマンスに関する記述",
-                aiNote: "AIを活用し、プロジェクトデータに基づいた詳細な要約の生成、潜在的なリスクの特定、実用的な推奨事項を受け取ります。",
-                generateAiBtn: "✨ AI分析を生成",
-                narrativeInitial: "このAI搭載機能は、プロジェクトの健全性に関する専門的な要約を提供し、データに基づいた主要なリスクを特定し、実行可能な推奨事項を提示します。",
-                footerDev: "Geminiを使用して開発、PMBOKに準拠",
+                aiNote: "スマートアルゴリズムを活用し、プロジェクトデータに基づいた詳細な要約の生成、潜在的なリスクの特定、実用的な推奨事項を受け取ります。",
+                generateAiBtn: "✨ スマート分析を生成",
+                narrativeInitial: "この機能は、プロジェクトの健全性に関する専門的な要約を提供し、データに基づいた主要なリスクを特定し、実行可能な推奨事項を提示します。",
+                footerDev: "Geminiで開発、PMBOKに準拠",
                 footerPrepared: "作成者: ハイサム - engr.haissam@gmail.com",
                 statusInitial: "分析のために値を入力してください。",
                 statusDetailInitial: "計算にはすべての主要な入力フィールドが必要です。",
                 chartLabels: ['計画価値 (PV)', 'アーンド・バリュー (EV)', '実コスト (AC)'],
                 chartTitle: 'PV vs EV vs AC',
                 months: 'ヶ月',
-                aiReportsTitle: "AIレポートアシスタント",
-                aiReportsDesc: "ワンクリックで、さまざまなステークホルダー向けの状況報告書を作成します。AIがパフォーマンスに関する記述を選択した対象者向けの下書きに再フォーマットします。",
+                aiReportsTitle: "レポートアシスタント",
+                aiReportsDesc: "ワンクリックで、さまざまなステークホルダー向けの状況報告書を作成します。システムがパフォーマンスに関する記述を選択した対象者向けの下書きに再フォーマットします。",
                 execSummaryBtn: "経営層向け要約を作成",
                 teamUpdateBtn: "チーム向け進捗報告を作成",
                 aiReportsInitial: "レポートタイプを選択して下書きを生成します。例えば、「経営層向け要約」は高レベルの成果と予算への影響に焦点を当て、「チーム向け進捗報告」はより詳細で行動指向の要約を提供します。",
@@ -535,6 +538,7 @@
         const execSummaryBtn = document.getElementById('exec-summary-btn');
         const teamUpdateBtn = document.getElementById('team-update-btn');
         const copyReportBtn = document.getElementById('copy-report-btn');
+        const copyNarrativeBtn = document.getElementById('copy-narrative-btn');
 
         const inputs = [projectTitleInput, projectManagerInput, currencySymbolInput, bacInput, durationInput, dataDateInput, percentCompleteInput, acInput, pvInput, progressCurveSelect];
         let evaChart = null;
@@ -552,6 +556,7 @@
         execSummaryBtn.addEventListener('click', () => generateAIReport('exec'));
         teamUpdateBtn.addEventListener('click', () => generateAIReport('team'));
         copyReportBtn.addEventListener('click', copyReportToClipboard);
+        copyNarrativeBtn.addEventListener('click', copyNarrativeToClipboard);
 
         // Initial state
         initializeChart();
@@ -713,7 +718,7 @@
             const pessimisticTitle = translations[currentLanguage].eacPessimistic;
 
             const titleTooltip = translations[currentLanguage].tooltip_eacForecastTitle;
-            const optimisticTooltip = translations[currentLanguage].tooltip_eacOptimistic;
+            const optimisticTooltip = translations[currentLanguage].tooltip_eacForecastTitle;
             const mostLikelyTooltip = translations[currentLanguage].tooltip_eacMostLikely;
             const pessimisticTooltip = translations[currentLanguage].tooltip_eacPessimistic;
 
@@ -761,7 +766,6 @@
                 </div>
             `;
         }
-
 
         function calculateEVA() {
             const currencySymbol = currencySymbolInput.value || '$';
@@ -1000,6 +1004,168 @@
             }
         }
 
+        // ---------- OFFLINE AI ENGINE START ----------
+        
+        function randomChoice(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function generateOfflineAnalysis(metrics, lang) {
+            const { bac, duration, dataDate, pctTimeUsed, pctBudgetUsed, spi, cpi, sv, cv, durationChange, eac, vac, tcpi, currencySymbol } = metrics;
+
+            const formatCur = (val) => formatValue(val, 'currency', currencySymbol);
+            const formatPct = (val) => formatValue(val, 'percent');
+            const formatNum = (val) => formatValue(val, 'decimal');
+            const isJa = lang === 'ja';
+
+            // 1. Project Status
+            let projectStatus = '';
+            if (spi >= 0.95 && cpi >= 0.95) projectStatus = isJa ? '良好 (Good)' : 'Good';
+            else if (spi < 0.85 || cpi < 0.85) projectStatus = isJa ? 'リスクあり (At Risk)' : 'At Risk';
+            else projectStatus = isJa ? '警告 (Warning)' : 'Warning';
+
+            // 2. Dynamic Phase Analysis
+            const phaseIntroEN = [
+                `At month ${dataDate} out of ${duration}, the project has consumed ${formatPct(pctTimeUsed)} of its schedule.`,
+                `Currently in month ${dataDate} of a ${duration}-month timeline, we have utilized ${formatPct(pctTimeUsed)} of the planned schedule.`
+            ];
+            const phaseIntroJA = [
+                `プロジェクト期間${duration}ヶ月中の${dataDate}ヶ月目において、スケジュールの${formatPct(pctTimeUsed)}を消化しています。`,
+                `全${duration}ヶ月のタイムラインのうち${dataDate}ヶ月が経過し、予定スケジュールの${formatPct(pctTimeUsed)}を利用しました。`
+            ];
+            
+            let phaseEN = `${randomChoice(phaseIntroEN)} Concurrently, ${formatPct(pctBudgetUsed)} of the ${formatCur(bac)} budget has been utilized.`;
+            let phaseJA = `${randomChoice(phaseIntroJA)} 同時に、総予算${formatCur(bac)}の${formatPct(pctBudgetUsed)}が使用されました。`;
+
+            if (pctTimeUsed - pctBudgetUsed > 15) {
+                phaseEN += " The burn rate is notably slower than the timeline progression, which may indicate delayed billing or resource under-utilization.";
+                phaseJA += " 資金燃焼率がスケジュールの進行に比べて著しく遅く、請求の遅れやリソースの活用不足の可能性を示しています。";
+            }
+            const projectPhaseAnalysis = isJa ? phaseJA : phaseEN;
+
+            // 3. Schedule Analysis
+            const schedStatusEN = spi >= 1.05 ? 'ahead of expectations' : (spi < 0.95 ? 'lagging behind the baseline' : 'aligning closely with the plan');
+            const schedStatusJA = spi >= 1.05 ? '期待を上回って' : (spi < 0.95 ? '基準から遅れて' : '計画とほぼ一致して');
+            const shiftWordEN = durationChange >= 0 ? 'ahead' : 'behind';
+            const shiftWordJA = durationChange >= 0 ? '前倒し' : '遅延';
+
+            const scheduleAnalysis = isJa
+                ? `スケジュールパフォーマンスは現在、${schedStatusJA}進行しています。スケジュール効率指数(SPI)は${formatNum(spi)}であり、この期間に予定されていた作業の${formatPct(spi * 100)}を完了していることを意味します。金額ベースでは、${formatCur(sv)}の差異となります。アーンド・スケジュール指標(SPI-t)を用いると、これは${formatNum(Math.abs(durationChange))}ヶ月の具体的なスケジュールの${shiftWordJA}に相当します。`
+                : `Schedule performance is currently ${schedStatusEN}. The Schedule Performance Index (SPI) stands at ${formatNum(spi)}, meaning we are completing ${formatPct(spi * 100)} of the work originally planned for this timeframe. In monetary terms, this is a variance of ${formatCur(sv)}. Utilizing earned schedule metrics (SPI-t), this translates to a tangible schedule shift of ${formatNum(Math.abs(durationChange))} months ${shiftWordEN}.`;
+
+            // 4. Cost Analysis
+            const costStatusEN = cpi >= 1.05 ? 'under' : (cpi < 0.95 ? 'over' : 'on');
+            const costStatusJA = cpi >= 1.05 ? '予算内 (アンダーバジェット)' : (cpi < 0.95 ? '予算超過 (オーバーバジェット)' : '予算通り');
+            const deficitWordEN = vac >= 0 ? 'surplus' : 'deficit';
+            const deficitWordJA = vac >= 0 ? '黒字(余剰)' : '赤字(不足)';
+
+            const costAnalysis = isJa
+                ? `財務的観点から見ると、プロジェクトは${costStatusJA}で稼働しています。コスト効率指数(CPI)は${formatNum(cpi)}で、${currencySymbol}1.00費やすごとに${currencySymbol}${formatNum(cpi)}の出来高を実現しています。現在のコスト差異(CV)は${formatCur(cv)}です。現在の効率に基づくと、完成時差異(VAC)は最終的に${formatCur(Math.abs(vac))}の${deficitWordJA}になると予測され、最有力となる完成時総コスト見積(EAC)は${formatCur(eac)}となります。`
+                : `From a financial perspective, the project is operating ${costStatusEN} budget. With a Cost Performance Index (CPI) of ${formatNum(cpi)}, the project is realizing ${currencySymbol}${formatNum(cpi)} in earned value for every ${currencySymbol}1.00 spent. The current Cost Variance (CV) is ${formatCur(cv)}. Based on current efficiency, the Variance at Completion (VAC) forecasts a final ${deficitWordEN} of ${formatCur(Math.abs(vac))}, resulting in a Most Likely Estimate at Completion (EAC) of ${formatCur(eac)}.`;
+
+            // 5. Heuristic Recommendations
+            const recommendations = [];
+            
+            // Rule 1: TCPI Reality Check (with New Severe Tier)
+            if (isFinite(tcpi) && tcpi > 1.20) {
+                recommendations.push(isJa 
+                    ? `TCPIが${formatNum(tcpi)}と非常に高いため、当初の予算(BAC)を達成するために必要な${formatPct((tcpi - 1) * 100)}の効率改善は現実的ではありません。現在の基準を放棄し、ステークホルダーと再ベースライン化(Re-baselining)を協議することを強く推奨します。`
+                    : `The TCPI of ${formatNum(tcpi)} indicates a required efficiency increase of ${formatPct((tcpi - 1) * 100)}, which is highly unrealistic. We strongly recommend abandoning the current baseline and discussing re-baselining with stakeholders.`
+                );
+            } else if (isFinite(tcpi) && tcpi > 1.05) {
+                recommendations.push(isJa 
+                    ? `TCPIが${formatNum(tcpi)}であり、当初予算を達成するには残りの作業を${formatPct((tcpi - 1) * 100)}高いコスト効率で完了する必要があります。厳密なコスト管理を実施し、残りのスコープに対するバリューエンジニアリングを評価してください。`
+                    : `The TCPI of ${formatNum(tcpi)} indicates that remaining work must be completed with ${formatPct((tcpi - 1) * 100)} greater cost efficiency to meet the original BAC. Implement strict cost-control measures and evaluate remaining scope for value engineering.`
+                );
+            }
+
+            // Rule 2: Schedule Recovery (Adjusted Threshold)
+            if (spi < 0.95) {
+                recommendations.push(isJa
+                    ? `スケジュール遅延（${formatNum(Math.abs(durationChange))}ヶ月）が検出されました。クリティカルパスを評価し、スケジュールを「ファストトラッキング」（タスクの並行処理）または「クラッシング」（リソースの追加）する機会を探ってください。`
+                    : `Schedule delays detected (${formatNum(Math.abs(durationChange))} months). Evaluate the critical path for opportunities to 'fast-track' (performing tasks in parallel) or 'crash' (adding resources) the schedule.`
+                );
+            }
+
+            // Rule 3: Re-allocating Funds for Speed
+            if (cv > 0 && sv < 0) {
+                recommendations.push(isJa
+                    ? `プロジェクトは${formatCur(cv)}の予算余剰を持っていますが、スケジュールは遅れています。遅延しているアクティビティを迅速化するため、この余剰資金の一部を時間外労働や追加リソースに再配分することを検討してください。`
+                    : `The project holds a budget surplus of ${formatCur(cv)} but is behind schedule. Consider reallocating some of these surplus funds to overtime or additional resources to expedite delayed activities.`
+                );
+            }
+            
+            // Rule 4: Fast but Expensive (New)
+            if (spi > 1.05 && cpi < 0.95) {
+                recommendations.push(isJa
+                    ? `プロジェクトはスケジュールを前倒しで進んでいますが、コストが割高になっています。時間外労働や追加費用を見直し、スピードのために品質が犠牲になっていないか、直近の成果物を監査してください。`
+                    : `The project is accelerating ahead of schedule but operating at a premium cost. Review overtime expenses, expediting fees, and audit recent deliverables to ensure quality is not being sacrificed for speed.`
+                );
+            }
+            
+            // Rule 5: Slow but Cheap (New)
+            if (spi < 0.85 && cpi > 1.10) {
+                recommendations.push(isJa
+                    ? `大幅なスケジュール遅延に対してコスト効率が異常に高い場合、未処理の請求書やリソースの待機が発生している可能性があります。すべての実コスト(AC)が正確に計上されているか確認し、リソースのボトルネックを調査してください。`
+                    : `High cost efficiency coupled with significant schedule delays may indicate unprocessed vendor invoices or idle resources. Verify that all Actual Costs (AC) are fully accrued and investigate resource bottlenecks.`
+                );
+            }
+
+            // Rule 6: Sunk Cost Warning & Point of No Return (Updated to include late stage deficit)
+            if (pctTimeUsed > 85 && cpi < 0.95) {
+                recommendations.push(isJa
+                    ? `プロジェクト期間の85%以上が経過し、低いCPIが続いているため、予算の回復は極めて困難です。プロジェクトの適切なクローズに集中し、予測される赤字額(${formatCur(Math.abs(vac))})について直ちにステークホルダーの承認を得てください。`
+                    : `With over 85% of the project timeline consumed and a sustained low CPI, budget recovery is highly improbable. Focus on controlled project closure and secure immediate stakeholder approval for the projected deficit of ${formatCur(Math.abs(vac))}.`
+                );
+            } else if (cpi < 0.85 && pctTimeUsed > 50) {
+                recommendations.push(isJa
+                    ? `プロジェクトの半分を過ぎても低いCPIが続いているため、当初のBACを達成することは極めて困難です。新しいEAC(${formatCur(eac)})に基づいて、ステークホルダーに正式な予算の改定を提案してください。`
+                    : `Given the sustained low CPI past the project midpoint, achieving the original BAC is highly unlikely. Propose a formal budget revision to stakeholders based on the new EAC of ${formatCur(eac)}.`
+                );
+            }
+
+            // Fallback: Smooth Sailing
+            if (recommendations.length === 0) {
+                recommendations.push(isJa
+                    ? `現在のパフォーマンス指標は優れています。現在の管理プロセスを維持し、既存の余剰を保護するために今後のリスクを積極的に監視してください。`
+                    : `Current performance metrics are excellent. Maintain current management practices and ensure upcoming risks are actively monitored to protect the existing surplus.`
+                );
+            }
+
+            return { projectStatus, projectPhaseAnalysis, scheduleAnalysis, costAnalysis, recommendations };
+        }
+
+        function generateOfflineReport(narrativeData, reportType, lang, metrics) {
+            const { projectStatus, scheduleAnalysis, costAnalysis, recommendations } = narrativeData;
+            const { eac, vac, currencySymbol } = metrics;
+            const formatCur = (val) => formatValue(val, 'currency', currencySymbol);
+            
+            const isJa = lang === 'ja';
+            const isExec = reportType === 'exec';
+
+            if (isExec) {
+                const statusIntroEN = `The overall project status is currently evaluated as: ${projectStatus.toUpperCase()}.`;
+                const statusIntroJA = `現在のプロジェクトの全体的なステータスは「${projectStatus}」と評価されています。`;
+                
+                const forecastEN = `Forecast Summary: We are tracking towards a final Estimate at Completion (EAC) of ${formatCur(eac)}, which represents a projected ${vac >= 0 ? 'surplus' : 'deficit'} of ${formatCur(Math.abs(vac))} against the baseline.`;
+                const forecastJA = `予測の概要: 最終的な完成時総コスト見積(EAC)は${formatCur(eac)}に向かって進行しており、これは基準に対して${formatCur(Math.abs(vac))}の${vac >= 0 ? '黒字(余剰)' : '赤字(不足)'}を予測しています。`;
+                
+                const topRecsEN = recommendations.slice(0, 2).map(r => `• ${r}`).join('\n');
+                const topRecsJA = recommendations.slice(0, 2).map(r => `・ ${r}`).join('\n');
+
+                return isJa 
+                    ? `【経営層向け要約】\n\n${statusIntroJA}\n\n${forecastJA}\n\n■ 重要な推奨事項:\n${topRecsJA}`
+                    : `[Executive Summary]\n\n${statusIntroEN}\n\n${forecastEN}\n\n■ Critical Recommendations:\n${topRecsEN}`;
+            } else {
+                const topRecsEN = recommendations.map(r => `• ${r}`).join('\n');
+                const topRecsJA = recommendations.map(r => `・ ${r}`).join('\n');
+                
+                return isJa
+                    ? `【チーム向け進捗報告】\n\n■ スケジュールの状況:\n${scheduleAnalysis}\n\n■ コストの状況:\n${costAnalysis}\n\n■ チームのアクションアイテム:\n${topRecsJA}`
+                    : `[Team Update]\n\n■ Schedule Status:\n${scheduleAnalysis}\n\n■ Cost Status:\n${costAnalysis}\n\n■ Team Action Items:\n${topRecsEN}`;
+            }
+        }
+        
         async function generateAIAnalysis() {
             if (Object.keys(currentMetrics).length === 0) { return; }
             aiAnalysisBtn.disabled = true;
@@ -1008,21 +1174,19 @@
             aiReportsContainer.classList.add('hidden');
             aiReportOutput.innerHTML = translations[currentLanguage].aiReportsInitial;
 
-            let userQuery = `Analyze the following project data: ${JSON.stringify(currentMetrics)}.`;
-            if (currentLanguage === 'ja') {
-                userQuery += " Please provide the full analysis in professional, business-level Japanese.";
-            }
-            
             try {
-                const response = await callGeminiAPI(userQuery, 'json');
-                const jsonText = response.candidates[0].content.parts[0].text;
-                const parsedData = JSON.parse(jsonText);
+                // Simulate a slight delay to present a "processing" feel
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                const parsedData = generateOfflineAnalysis(currentMetrics, currentLanguage);
                 fullPerformanceNarrative = parsedData; 
                 renderAINarrative(parsedData);
                 aiReportsContainer.classList.remove('hidden');
+                copyNarrativeBtn.classList.remove('hidden');
             } catch (error) {
-                console.error('Error calling or parsing Gemini API:', error);
-                aiNarrativeContent.innerHTML = '<p>Sorry, an error occurred during the analysis. Please check your API key and the console.</p>';
+                console.error('Error generating offline analysis:', error);
+                aiNarrativeContent.innerHTML = '<p>Sorry, an error occurred during the analysis. Please check the console.</p>';
+                copyNarrativeBtn.classList.add('hidden');
             } finally {
                 aiAnalysisBtn.disabled = false;
                 aiAnalysisBtn.innerHTML = translations[currentLanguage].generateAiBtn;
@@ -1037,34 +1201,32 @@
             aiReportOutput.innerHTML = '<p>Generating report...</p>';
             copyReportBtn.classList.add('hidden');
 
-            const projectTitle = currentMetrics.projectTitle || "the project";
-
-            let prompt;
-            if (currentLanguage === 'en') {
-                if (reportType === 'exec') {
-                    prompt = `Based on the following detailed project analysis for the project titled "${projectTitle}", please draft a concise, high-level email summary for an executive leadership team. Focus on the overall project status (Good, Warning, At Risk), the key budget and schedule implications, and the most critical recommendations. Omit deep technical details. \n\nANALYSIS:\n${JSON.stringify(fullPerformanceNarrative)}`;
-                } else { // team
-                    prompt = `Based on the following detailed project analysis for the project titled "${projectTitle}", please draft a detailed, action-oriented status update for the internal project team. Clearly state the current SPI and CPI, explain what they mean in practical terms, and list the specific recommendations the team should focus on. \n\nANALYSIS:\n${JSON.stringify(fullPerformanceNarrative)}`;
-                }
-            } else { // Japanese
-                if(reportType === 'exec'){
-                    prompt = `以下の詳細なプロジェクト分析に基づき、プロジェクト名「${projectTitle}」のエグゼクティブリーダーシップチーム向けの簡潔で高レベルなメール要約を作成してください。プロジェクト全体のステータス（良好、警告、リスクあり）、主要な予算とスケジュールの影響、そして最も重要な推奨事項に焦点を当ててください。技術的な詳細は省略してください。\n\n分析：\n${JSON.stringify(fullPerformanceNarrative)}`;
-                } else { // team
-                    prompt = `以下の詳細なプロジェクト分析に基づき、プロジェクト名「${projectTitle}」の内部プロジェクトチーム向けの詳細で行動指向の進捗報告を作成してください。現在のSPIとCPIを明確に述べ、それらが実務上何を意味するかを説明し、チームが焦点を当てるべき具体的な推奨事項をリストアップしてください。\n\n分析：\n${JSON.stringify(fullPerformanceNarrative)}`;
-                }
-            }
-
             try {
-                const response = await callGeminiAPI(prompt, 'text');
-                const reportText = response.candidates[0].content.parts[0].text;
-                aiReportOutput.innerText = reportText; // Use innerText to preserve formatting for copy
+                // Simulate a slight delay to present a "processing" feel
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                const reportText = generateOfflineReport(fullPerformanceNarrative, reportType, currentLanguage, currentMetrics);
+                aiReportOutput.innerText = reportText; 
                 copyReportBtn.classList.remove('hidden');
             } catch(error) {
-                console.error('Error generating AI report:', error);
+                console.error('Error generating offline report:', error);
                 aiReportOutput.innerHTML = '<p>Sorry, an error occurred while generating the report.</p>';
             } finally {
                 buttons.forEach(btn => btn.disabled = false);
             }
+        }
+
+        // ---------- OFFLINE AI ENGINE END ----------
+
+        function copyNarrativeToClipboard() {
+            const narrativeText = aiNarrativeContent.innerText;
+            navigator.clipboard.writeText(narrativeText).then(() => {
+                const originalHtml = copyNarrativeBtn.innerHTML;
+                copyNarrativeBtn.innerHTML = translations[currentLanguage].copiedBtn;
+                setTimeout(() => {
+                     copyNarrativeBtn.innerHTML = originalHtml;
+                }, 2000);
+            });
         }
 
         function copyReportToClipboard() {
@@ -1109,53 +1271,7 @@
                     <div><h4 class="font-semibold text-md">${recsTitle}</h4><ul class="list-disc list-inside space-y-1">${recommendationsHtml}</ul></div>
                 </div>`;
         }
-
-        async function callGeminiAPI(userQuery, responseType = 'json') {
-            const apiKey = ""; // API key is handled by the Canvas environment.
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-            
-            let payload = {
-                contents: [{ parts: [{ text: userQuery }] }]
-            };
-
-            if (responseType === 'json') {
-                payload.generationConfig = {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: "OBJECT",
-                        properties: {
-                            projectStatus: { type: "STRING" },
-                            projectPhaseAnalysis: { type: "STRING" },
-                            scheduleAnalysis: { type: "STRING" },
-                            costAnalysis: { type: "STRING" },
-                            recommendations: { type: "ARRAY", items: { type: "STRING" } }
-                        },
-                        required: ["projectStatus", "projectPhaseAnalysis", "scheduleAnalysis", "costAnalysis", "recommendations"]
-                    }
-                }
-            }
-
-            // Using exponential backoff for retries is a good practice for production apps
-            let response;
-            for (let i = 0; i < 3; i++) {
-                try {
-                    response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (response.ok) {
-                        return await response.json();
-                    }
-                    if (response.status >= 500) { // Retry on server errors
-                        throw new Error(`API server error with status ${response.status}`);
-                    }
-                     // Don't retry on client errors (like 400 Bad Request)
-                    throw new Error(`API request failed with status ${response.status}`);
-                } catch (error) {
-                    if (i === 2) throw error;
-                    await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
-                }
-            }
-        }
         
-        // FIX: This new function will handle smart tooltip positioning
         function initializeTooltips() {
             document.querySelectorAll('.tooltip-trigger').forEach(trigger => {
                 trigger.addEventListener('mouseover', () => {
@@ -1231,9 +1347,8 @@
             aiNarrativeContent.innerHTML = translations[currentLanguage].narrativeInitial;
             aiReportsContainer.classList.add('hidden');
             aiReportOutput.innerHTML = translations[currentLanguage].aiReportsInitial;
+            copyNarrativeBtn.classList.add('hidden');
         }
     </script>
 </body>
 </html>
-
-
